@@ -1,27 +1,72 @@
 #include <iostream>
 #include <iomanip>
-#include <cmath>
-#include <cstdio>
 #include <string>
-#include <cstdlib>
-#include <conio.h> //review later
+#include <vector>
+#include <limits>
+#include <algorithm>
 #include <cctype>
 
 struct Student
 {
     std::string student_id;
-
     std::string first_name;
     std::string middle_name;
     std::string last_name;
+    std::string program;
+    std::string year_level;
+};
 
+struct Grade
+{
+    std::string student_id;
     std::string course;
-    std::string subject;
 
     double prelim, midterm, endterm, final_grade;
 };
 
-std::string inputText(const std::string& prompt)
+std::vector<Student> students;
+std::vector<Grade> grades;
+
+std::string toLower(std::string text)
+{
+    std::transform(
+        text.begin(), text.end(), text.begin(),
+        [](unsigned char c)
+        {
+            return static_cast<char>(std::tolower(c));
+        }
+    );
+
+    return text;
+}
+
+std::string inputRequiredText(const std::string& prompt)
+{
+    std::string value;
+
+    while(true)
+    {
+        std::cout << prompt;
+        std::getline(std::cin, value);
+
+        bool isEmpty = std::all_of(
+            value.begin(), value.end(),
+            [](unsigned char c)
+            {
+                return std::isspace(c);
+            }
+        );
+
+        if (!isEmpty)
+        {
+            return value;
+        }
+
+        std::cout <<"\tThis field is required. Please enter a value.\n";
+    }
+}
+
+std::string inputOptionalText(const std::string& prompt)
 {
     std::string value;
 
@@ -39,11 +84,12 @@ double inputGrade(const std::string& prompt)
     {
         std::cout << prompt;
 
-        if (std::cin >> grade && grade && grade >= 0 && grade <= 100)
+        if (std::cin >> grade && grade >= 0 && grade <= 100)
         {
             std::cin.ignore(
                 std::numeric_limits<std::streamsize>::max(), '\n'
             );
+
             return grade;
         }
 
@@ -51,106 +97,246 @@ double inputGrade(const std::string& prompt)
 
         std::cin.clear();
         std::cin.ignore(
-            std::numeric_limits<std::streamlsize>::max(), '\n'
+            std::numeric_limits<std::streamsize>::max(), '\n'
         );
     }
 }
 
-double calculateFinalGrade(const Student& student)
+double calculateFinalGrade(const Grade& grade)
 {
-    return (student.prelim * 0.30) +
-           (student.midterm * 0.30) +
-           (student.endterm * 0.40);
+    return (grade.prelim * 0.30) +
+           (grade.midterm * 0.30) +
+           (grade.endterm * 0.40);
 }
 
-void insertStudent()
+void pauseScreen()
+{
+    std::cout <<"\n\tPress Enter to continue...";
+    std::cin.get();
+}
+
+void registerStudent()
 {
     Student student;
 
-    std::cout <<"\n\n\t===INSERT NEW STUDENT RECORD===\n\n";
+    std::cout << "\n\n\t===REGISTER NEW STUDENT===\n\n";
 
-    student.student_id = inputText("\tEnter Student ID Number: ");
+    student.student_id = inputRequiredText(
+        "\tEnter Student ID: "
+    );
 
-    student.first_name = inputText("\tEnter First Name: ");
+    for (const Student& existing : students)
+    {
+        if (existing.student_id == student.student_id)
+        {
+            std::cout << "\n\tStudent ID already exist!";
+            return;
+        }
+    }
 
-    student.middle_name = inputText("\tEnter Middle Name (optional): ");
+    student.first_name = inputRequiredText(
+        "\tEnter First Name: "
+    );
 
-    student.last_name = inputText("\tEnter Last Name: ");
+    student.middle_name = inputOptionalText(
+        "\tEnter Middle Name (optional): "
+    );
 
-    student.course = inputText("\tEnter Course: ");
+    student.last_name = inputRequiredText(
+        "\tEnter Last Name: "
+    );
 
-    student.subject = inputText("\tEnter Subject: ");
+    student.program = inputRequiredText(
+        "\tEnter Program: "
+    );
 
-    student.prelim = inputText("\tEnter Prelim Grade: ");
+    student.year_level = inputRequiredText(
+        "\tEnter Year Level: "
+    );
 
-    student.midterm = inputText("\tEnter Midterm Grade: ");
+    students.push_back(student);
 
-    student.endterm = inputTExt("\tEnter Endterm Grade: ");
-
-    student.final_grade = calculateFinalGrade(student);
-
-    std:cout <<"\n\tFinal Grade: "
-             << std::fixed << std::setprecision(2)
-             << student.final_grade << '\n';
-
-    std::cout << "\n\tStudent information successfully entered.\n";
+    std::cout << "\n\tStudent successfully registered!\n";
 }
 
-int main() 
+std::vector<std::string> getPrograms()
 {
-    char choice;
-    char another;
+    std::vector<std::string> programs;
 
-    std::cout << std::fixed << std::setprecision(2);
+    for (const Student& student : students)
+    {
+        bool exists = false;
+
+        for (const std::string& program : programs)
+        {
+            if (program == student.program)
+            {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists)
+        {
+            programs.push_back(student.program);
+        }
+    }
+
+    return programs;
+}
+
+std::string selectProgram()
+{
+    std::vector<std::string> programs = getPrograms();
+
+    if (programs.empty())
+    {
+        std::cout << "\n\tNo registered students found.\n";
+        return "";
+    }
+
+    std::cout <<"\n\t=== SELECT PROGRAM ===\n\n";
+
+    for (std::size_t i = 0; i < programs.size(); i++)
+    {
+        std::cout << "\t[" << i + 1 << "] "
+                  << programs[i] << '\n';
+    }
+
+    std::size_t choice;
 
     while(true)
     {
-        std::system("CLS");
-        std::system("COLOR F0");
-        
-        std::cout <<"\n\n\t========================================";
-        std::cout <<"\n\tSTUDENT GRADING SYSTEM";
-        std::cout <<"\n\t========================================";
+        std::cout << "\n\tSelect Program: ";
 
-        std::cout <<"\n\n\t[1]INSERT STUDENT RECORD";
-        std::cout <<"\n\t[2]DISPLAY STUDENT RECORD";
-        std::cout <<"\n\t[3]SEARCH STUDENT RECORD";
-        std::cout <<"\n\t[4]EDIT STUDENT RECORD";
-        std::cout <<"\n\t[5]DELETE STUDENT RECORD";
-        std::cout <<"\n\t[6]EXIT";
+        if (std::cin >> choice &&
+            choice >= 1 &&
+            choice <= programs.size())
+        {
 
-        std::cout <<"\n\n\tEnter your choice: ";
-        std::cin >> choice;
+            std::cin.ignore(
+                std::numeric_limits<std::streamsize>::max(), '\n'
+            );
+
+            return programs[choice - 1];
+        }
+
+        std::cout << "\tInvalid selection. Try again.\n";
+
+        std::cin.clear();
 
         std::cin.ignore(
             std::numeric_limits<std::streamsize>::max(), '\n'
-        )
+        );
+    }
+}
 
-        switch (choice)
+int selectStudent(const std::string& program)
+{
+    std::string search;
+
+    std::cout << "\n\t=== FIND STUDENT ===\n";
+
+    search = inputRequiredText(
+        "\n\tSearch Student ID or Name: "
+    );
+
+    std::vector<std::size_t> matches;
+
+    std::string searchLower = toLower(search);
+
+    for (std::size_t i = 0; i < students.size(); i++)
+    {
+        const Student& student = students[i];
+
+        if (student.program != program)
         {
-            case '1':
+            continue;
+        }
 
-                another = 'Y';
+        std::string fullName = 
+            student.first_name + " " +
+            student.middle_name + " " +
+            student.last_name;
 
-                while (another == 'Y' || another == 'y')
-                {
-                    system("CLS");
+        if (toLower(student.student_id).find(searchLower) != std::string::npos ||
+            toLower(fullName).find(searchLower) != std::string::npos)
+        {
+            matches.push_back(i);
+        }
+    }
 
-                    insertStudent();
+    if (matches.empty())
+    {
+        std::cout << "\n\tNo matching student found in this program.\n";
+        return -1;
+    }
 
-                    std::cout << "\n\tAdd another student record? (Y/N): ";
-                    std::cin >> another;
+    std::cout << "\n\t=== SEARCH RESULTS ===\n\n";
 
-                    std::cin.ignore(
-                        std::numeric_limits<std::streamsize>::max(), '\n'
-                    );
-                }
+    for (std::size_t i = 0; i < matches.size(); i++)
+    {
+        const Student& student = students[matches[i]];
 
-                break;
+        std::string fullName =
+            student.first_name + " " +
+            student.middle_name + " " +
+            student.last_name;
 
-            case '2':
+        std::cout << "\t[" << i + 1 << "] "
+                  << student.student_id << " - "
+                  << fullName << '\n';
+    }
+
+    std::size_t choice;
+
+    while(true)
+    {
+        std::cout << "\n\tSelect Student: ";
+
+        if (std::cin >> choice &&
+            choice >= 1 &&
+            choice <= matches.size())
+        {
+            std::cin.ignore(
+                std::numeric_limits<std::streamsize>::max(), '\n'
+            );
             
+            return static_cast<int>(matches[choice - 1]);
+        }
 
+        std::cout << "\tInvalid selection. Try again.\n";
 
+        std::cin.clear();
 
+        std::cin.ignore(
+            std::numeric_limits<std::streamsize>::max(), '\n'
+        );
+    }
+}
+
+void displayStudentInformation(const Student& student)
+{
+    std::cout << "\n\t=== STUDENT INFORMATION ===\n";
+
+    std::cout << "\n\tStudent ID: "
+              << student.student_id;
+
+    std::cout << "\n\tFirst Name: "
+              << student.first_name;
+
+    std::cout << "\n\tMiddle Name: "
+              << (student.middle_name.empty()
+            ? "N/A" : student.middle_name);
+
+    std::cout << "\n\tLast Name: "
+              << student.last_name;
+
+    std::cout << "\n\tProgram: "
+             << student.program;
+
+    std::cout << "\n\tYear Level: "
+              << student.year_level;
+
+    std::cout << '\n';
 }
