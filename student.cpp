@@ -327,7 +327,7 @@ void displayStudentInformation(const Student& student)
 
     std::cout << "\n\tMiddle Name: "
               << (student.middle_name.empty()
-            ? "N/A" : student.middle_name);
+                  ? "N/A" : student.middle_name);
 
     std::cout << "\n\tLast Name: "
               << student.last_name;
@@ -339,4 +339,67 @@ void displayStudentInformation(const Student& student)
               << student.year_level;
 
     std::cout << '\n';
+}
+
+void insertStudentGrades()
+{
+    std::cout << "\n\n\t=== INSERT STUDENT GRADES ===\n";
+
+    std::string program = selectProgram();
+
+    if (program.empty())
+    {
+        return;
+    }
+
+    std::string course = inputRequiredText(
+        "\n\tEnter Course: "
+    );
+
+    int studentIndex = selectStudent(program);
+
+    if (studentIndex == -1)
+    {
+        return;
+    }
+
+    const Student& student = students[studentIndex];
+
+    displayStudentInformation(student);
+
+    std::cout << "\n\tSelected Course: " << course << '\n';
+
+    for (const Grade& existing : grades)
+    {
+        if (existing.student_id == student.student_id &&
+            toLower(existing.course) == toLower(course))
+        {
+            std::cout << "\n\tGrades for this student and course "
+                      << "already exists!\\n";
+            return;
+        }
+    }
+
+    Grade grade;
+
+    grade.student_id = student.student_id;
+    grade.course = course;
+
+    std::cout << "\n\n\t=== ENTER GRADES ===\n\n";
+
+    grade.prelim = inputGrade("\tEnter Prelim Grade: ");
+
+    grade.midterm = inputGrade("\tEnter Midterm Grade: ");
+
+    grade.endterm = inputGrade("\tEnter Endterm Grade: ");
+
+    grade.final_grade = calculateFinalGrade(grade);
+
+    std::cout << "\n\tFinal Grades: "
+              << std::fixed << std::setprecision(2)
+              << grade.final_grade << '\n';
+
+    grade.push_back(grade);
+
+    std::cout << "\n\tGrade record successfully added!\n";
 }
