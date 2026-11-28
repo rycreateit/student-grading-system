@@ -403,3 +403,123 @@ void insertStudentGrades()
 
     std::cout << "\n\tGrade record successfully added!\n";
 }
+
+void displayStudentRecords()
+{
+    std::cout << "\n\n\t=== STUDENT GRADE RECORDS ===\n";
+
+    if (grades.empty())
+    {
+        std::cout << "\n\tNo grade records available.\n";
+        return;
+    }
+
+    for (const Grade& grade : grades)
+    {
+        for (const Student& student : students)
+        {
+            if (student.student_id == grade.student_id)
+            {
+                std::string fullName =
+                    student.first_name + " " +
+                    student.middle_name + " " +
+                    student.last_name;
+
+                std::cout << "\n\tStudent ID: "
+                          << student.student_id;
+                
+                std::cout << "\n\tStudent Name; "
+                          << fullName;
+                    
+                std::cout << "\n\tProgram: "
+                          << student.program;
+                        
+                std::cout << "\n\tYear Level; "
+                          << student.year_level;
+
+                std::cout << "\n\tCourse: "
+                          << grade.course;
+
+                std::cout << "\n\tPrelim: "
+                          << grade.prelim;
+
+                std::cout <<"\n\tMidterm: "
+                          << grade.midterm;
+
+                std::cout <<"\n\tEndterm: "
+                          << grade.endterm;
+
+                std::cout <<"\n\tFinal Grade: "
+                          << grade.final_grade;
+
+                std::cout << "\n\t--------------------------------\n";
+
+                break;
+            }
+        }
+    }
+}
+
+void searchStudentRecord()
+{
+    std::string search = inputRequiredText(
+        "\n\tEnter Student ID or Name: "
+    );
+
+    std::String searchLower = toLower(search);
+
+    bool found = false;
+
+    for (const Student& student : students)
+    {
+        std::string fullName =
+            student.first_name + " " +
+            student.middle_name + " " +
+            student.last_name;
+
+        if (toLower(student.student_id).find(searchLower) != std::string::npos ||
+            toLower(fullName).find(searchLower) != std::string::npos)
+        {
+            displayStudentInformation(student);
+
+            found = true;
+
+            std::cout << "\n\t=== GRADE RECORDS ===\n";
+
+            bool hasGrades = false;
+
+            for (const Grade& grade : grades)
+            {
+                if (grade.student_id == student.student_id)
+                {
+                    std::cout << "\n\tCourse: "
+                              << grade.course;
+
+                    std::cout << "\n\tPrelim: "
+                              << grade.prelim;
+                    
+                    std::cout << "\n\tMidterm: "
+                              << grade.midterm;
+
+                    std::cout << "\n\tEndterm: "
+                              << grade.endterm;
+
+                    std::cout << "\n\tFianl Grade: "
+                              << grade.final_grade << '\n';
+
+                    hasGrades = true;
+                }
+            }
+
+            if (!hasGrades)
+            {
+                std::cout << "\n\tNo grades recorded yet.\n";
+            }
+        }
+    }
+
+    if (!found)
+    {
+        std::cout << "\n\tNo matching student found.\n";
+    }
+}
